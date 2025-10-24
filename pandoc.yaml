@@ -1,0 +1,18 @@
+# docs/pandoc.yaml
+
+# Título da apresentação
+title: "Apresentação com GitHub Actions e Pandoc"
+# Autor(es)
+author: "Seu Nome"
+# Data (pode ser "today" para a data atual)
+date: "Outubro 2025"
+
+# Opções para a saída Beamer (slides)
+beamer:
+  # Tema visual dos slides (ex: Madrid, Berlin, PaloAlto)
+  theme: "B-Harvard"
+  # Tema de cores
+  colortheme: "default"
+
+# Nível de cabeçalho que deve iniciar um novo slide
+slide-level: 2 # Um '## Título do Slide' criará um novo slide
