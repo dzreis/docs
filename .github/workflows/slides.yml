@@ -1,26 +1,63 @@
 # .github/workflows/slides.yml
-name: Gerar Slides PDF
+
+name: 'Compilar Slides em PDF'
 
 on:
   push:
+    branches:
+      - main
+      - master
     paths:
-      - "docs/*.md"
+      # Monitora alterações em qualquer arquivo na pasta docs/
+      - 'docs/**' 
+  workflow_dispatch:
+    # Permite execução manual
 
 jobs:
-  build-slides:
+  build_slides:
+    # Usa ubuntu-latest, que é o ambiente necessário para rodar o Docker
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout do Código
+        uses: actions/checkout@v4
+        # Necessário para que o deploy no gh-pages funcione
+        with:
+          fetch-depth: 0 
 
-      - name: Instalar Pandoc
-        run: sudo apt-get update && sudo apt-get install -y pandoc texlive
+      - name: Criar Pasta de Saída
+        run: mkdir -p slides-output
 
-      - name: Converter Markdown em PDF
-        run: |
-          pandoc docs/presentation.md -o slides.pdf --slide-level=2 --pdf-engine=xelatex
+      - name: Compilar Markdown para PDF de Slides (Pandoc/Beamer)
+        # Usa a imagem Docker oficial que já vem com Pandoc e LaTeX
+        uses: docker://pandoc/latex:3.1
+        with:
+          # Argumentos do Pandoc:
+          # docs/presentation.md: Arquivo de entrada
+          # --output: Arquivo de saída na pasta 'slides-output/'
+          # -t beamer: Especifica o formato de saída como Beamer (slides LaTeX)
+          # --defaults docs/pandoc.yaml: Usa as configurações do arquivo YAML
+          args: docs/presentation.md --output=slides-output/presentation.pdf -t beamer --defaults docs/pandoc.yaml
 
-      - name: Publicar Artefato
+      - name: Publicar Artefato (Opção 1)
+        # O PDF compilado fica disponível na aba "Actions"
         uses: actions/upload-artifact@v4
         with:
           name: slides-pdf
-          path: slides.pdf
+          path: slides-output/presentation.pdf
+          retention-days: 5 # Mantém o artefato por 5 dias
+
+      # --- Publicação Automática em gh-pages (Opção 2 - Extensão) ---
+
+      - name: Configurar Páginas GitHub (gh-pages)
+        uses: actions/configure-pages@v5
+
+      - name: Upload de Artefato para Deploy
+        # Publica todo o diretório 'slides-output' como artefato de deploy
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: slides-output
+
+      - name: Deploy nas Páginas GitHub
+        id: deployment
+        uses: actions/deploy-pages@v4
